@@ -1,6 +1,20 @@
 import openpyxl as px
 import tkinter as tk
 from tkinter import messagebox
+path = "dbms.xlsx"
+def binary_search_add(sheet_obj, target):
+    left = 2  # Starting row index (assuming headers are in row 1)
+    right = sheet_obj.max_row
+    while left <= right:
+        mid = (left + right) // 2
+        mid_val = sheet_obj.cell(row=mid, column=1).value.lower()  # Assuming names are in the first column
+        if mid_val == target:
+            return mid
+        elif mid_val < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return left
 
 def binary_search(sheet_obj, target):
     left = 2  # Starting row index (assuming headers are in row 1)
@@ -34,15 +48,23 @@ def add_contact(sheet_obj):
     values = get_input_values()
 
     if validate_inputs(values):
-        new_row_index = binary_search(sheet_obj, values[0].lower())
-        sheet_obj.insert_rows(new_row_index)
-        for col, value in enumerate(values, start=1):
-            sheet_obj.cell(row=new_row_index, column=col, value=value)
-        wb_obj.save("dbms.xlsx")
-        messagebox.showinfo("Success", "Contact added successfully!")
-        clear_entries()
+        new_row_index = binary_search_add(sheet_obj, values[0].lower())
+        if new_row_index > 0:
+            # Check if the name already exists
+            name_exists = binary_search(sheet_obj, values[0].lower())
+            if name_exists != -1:
+                messagebox.showerror("Error", "Name already exists. Please choose a different name to add the contact.")
+            else:
+                sheet_obj.insert_rows(new_row_index)
+                for col, value in enumerate(values, start=1):
+                    sheet_obj.cell(row=new_row_index, column=col, value=value)
+                wb_obj.save(path)
+                messagebox.showinfo("Success", "Contact added successfully!")
+                clear_entries()
     else:
         messagebox.showerror("Error", "Invalid input format. Please check your inputs and try again.")
+
+
 
 def search_contact(sheet_obj):
     name = get_name_entry().strip().lower()
@@ -66,7 +88,7 @@ def delete_contact(sheet_obj):
     result_index = binary_search(sheet_obj, name)
     if result_index != -1:
         sheet_obj.delete_rows(result_index)
-        wb_obj.save("dbms.xlsx")
+        wb_obj.save(path)
         messagebox.showinfo("Success", "Contact deleted successfully!")
         clear_entries()
     else:
@@ -127,7 +149,7 @@ def create_field_update_window(sheet_obj, result_index, field):
     def save_update():
         new_value = new_value_entry.get().strip()
         sheet_obj.cell(row=result_index, column=1, value=new_value)
-        wb_obj.save("dbms.xlsx")
+        wb_obj.save(path)
         messagebox.showinfo("Success", f"{field} updated successfully!")
         update_window.destroy()
 
@@ -139,7 +161,7 @@ def clear_entries():
 
 def run_gui():
     global name_entry, mobile_entry, email_entry, reg_entry, course_entry, wb_obj
-    wb_obj = px.load_workbook("dbms.xlsx")
+    wb_obj = px.load_workbook(path)
     sheet_obj = wb_obj.active
 
     root = tk.Tk()
