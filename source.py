@@ -59,6 +59,18 @@ def update_contact(sheet_obj):
         create_update_window(sheet_obj, result_index)
     else:
         messagebox.showerror("Contact Not Found", "Contact not found in the database.")
+        
+
+def delete_contact(sheet_obj):
+    name = get_name_entry().strip().lower()
+    result_index = binary_search(sheet_obj, name)
+    if result_index != -1:
+        sheet_obj.delete_rows(result_index)
+        wb_obj.save("dbms.xlsx")
+        messagebox.showinfo("Success", "Contact deleted successfully!")
+        clear_entries()
+    else:
+        messagebox.showerror("Contact Not Found", "Contact not found in the database.")
 
 def get_input_values():
     return [
@@ -163,7 +175,8 @@ def create_buttons(root, sheet_obj):
     buttons = [
         ("Add Contact", lambda: add_contact(sheet_obj)),
         ("Search Contact", lambda: search_contact(sheet_obj)),
-        ("Update Contact", lambda: update_contact(sheet_obj))
+        ("Update Contact", lambda: update_contact(sheet_obj)),
+        ("Delete Contact", lambda: delete_contact(sheet_obj))  # Add this line for the Delete Contact button
     ]
     for i, (btn_text, cmd) in enumerate(buttons, start=5):
         tk.Button(root, text=btn_text, command=cmd).grid(row=i, column=0, columnspan=2, pady=5)
