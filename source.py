@@ -1,13 +1,15 @@
 import openpyxl as px
 import tkinter as tk
 from tkinter import messagebox
+
 path = "dbms.xlsx"
+
 def binary_search_add(sheet_obj, target):
     left = 2  # Starting row index (assuming headers are in row 1)
     right = sheet_obj.max_row
     while left <= right:
         mid = (left + right) // 2
-        mid_val = sheet_obj.cell(row=mid, column=1).value.lower()  # Assuming names are in the first column
+        mid_val = sheet_obj.cell(row=mid, column=1).value.lower()  # names are in the first column
         if mid_val == target:
             return mid
         elif mid_val < target:
@@ -64,8 +66,6 @@ def add_contact(sheet_obj):
     else:
         messagebox.showerror("Error", "Invalid input format. Please check your inputs and try again.")
 
-
-
 def search_contact(sheet_obj):
     name = get_name_entry().strip().lower()
     result_index = binary_search(sheet_obj, name)
@@ -81,7 +81,6 @@ def update_contact(sheet_obj):
         create_update_window(sheet_obj, result_index)
     else:
         messagebox.showerror("Contact Not Found", "Contact not found in the database.")
-        
 
 def delete_contact(sheet_obj):
     name = get_name_entry().strip().lower()
@@ -148,10 +147,24 @@ def create_field_update_window(sheet_obj, result_index, field):
 
     def save_update():
         new_value = new_value_entry.get().strip()
-        sheet_obj.cell(row=result_index, column=1, value=new_value)
-        wb_obj.save(path)
-        messagebox.showinfo("Success", f"{field} updated successfully!")
+        column_index = get_column_index(sheet_obj, field)  # Get the column index for the specified field
+        if column_index is not None:
+            sheet_obj.cell(row=result_index, column=column_index, value=new_value)
+            wb_obj.save(path)
+            messagebox.showinfo("Success", f"{field} updated successfully!")
+        else:
+            messagebox.showerror("Error", f"Failed to update {field}.")
         update_window.destroy()
+
+    def get_column_index(sheet_obj, field):
+        # Map field names to column indices (assuming fields are in the first row of the Excel sheet)
+        field_mapping = {
+            "Mobile Number": 2,
+            "Email ID": 3,
+            "Registration Number": 4,
+            "Course Enrolled": 5
+        }
+        return field_mapping.get(field)
 
     tk.Button(update_window, text="Save", command=save_update).pack()
 
@@ -198,7 +211,7 @@ def create_buttons(root, sheet_obj):
         ("Add Contact", lambda: add_contact(sheet_obj)),
         ("Search Contact", lambda: search_contact(sheet_obj)),
         ("Update Contact", lambda: update_contact(sheet_obj)),
-        ("Delete Contact", lambda: delete_contact(sheet_obj))  # Add this line for the Delete Contact button
+        ("Delete Contact", lambda: delete_contact(sheet_obj))  
     ]
     for i, (btn_text, cmd) in enumerate(buttons, start=5):
         tk.Button(root, text=btn_text, command=cmd).grid(row=i, column=0, columnspan=2, pady=5)
